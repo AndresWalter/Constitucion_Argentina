@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, ChevronDown, ChevronUp, Sun, Star, MessageCircle, Info, Heart, Coffee, FileText, Moon, BookText, Filter } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { GLOSSARY, CONSTITUTION_DATA, CATEGORIES, LIFE_SITUATIONS } from './data';
 import ChatWidget from './ChatWidget';
 import FullTextViewer from './FullTextViewer';
@@ -242,7 +243,9 @@ export default function App() {
                 <div className="h-4 w-px bg-slate-300 mx-1"></div>
 
                 {(filterType === 'category' ? CATEGORIES : LIFE_SITUATIONS).map((cat) => (
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${selectedCategory === cat
@@ -251,124 +254,156 @@ export default function App() {
                       }`}
                   >
                     {cat}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
 
             {/* Results */}
             <div className="space-y-4">
-              {filteredArticles.length === 0 ? (
-                <div className="text-center py-12 text-slate-500">
-                  {selectedCategory === 'Mis Guardados' ? (
-                    <>
-                      <Star className="w-12 h-12 mx-auto mb-3 opacity-30 text-amber-500" />
-                      <p className="text-lg">Todavía no tenés artículos guardados.</p>
-                      <p className="text-sm">Tocá la estrella en los artículos para leerlos después.</p>
-                    </>
-                  ) : (
-                    <>
-                      <Info className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                      <p className="text-lg">No encontramos artículos relacionados.</p>
-                      <p className="text-sm">Intentá con palabras como "trabajo", "familia", "libertad".</p>
-                    </>
-                  )}
-                </div>
-              ) : (
-                filteredArticles.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} rounded-xl shadow-sm border overflow-hidden transition-all duration-300 ${expandedId === item.id ? 'ring-2 ring-sky-500/50 shadow-md' : 'hover:shadow-md'}`}
+              <AnimatePresence mode="popLayout">
+                {filteredArticles.length === 0 ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    key="no-results"
+                    className="text-center py-12 text-slate-500"
                   >
-                    {/* Card Header (Always visible) */}
-                    <div
-                      className="p-5 cursor-pointer flex items-start justify-between"
-                      onClick={() => toggleExpand(item.id)}
-                    >
-                      <div className="flex items-start gap-4 flex-1">
-                        <div className={`p-3 rounded-lg mt-1 shrink-0 transition-colors ${expandedId === item.id ? 'bg-sky-500 text-white' : 'bg-sky-100 text-sky-600'}`}>
-                          {item.icon}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <span className="font-bold text-sky-700">{item.article}</span>
-                            <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full border border-slate-200">
-                              {item.category}
-                            </span>
-                          </div>
-                          <h3 className={`text-lg font-semibold leading-tight mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
-                            {item.explanation}
-                          </h3>
-                          {!expandedId && (
-                            <p className={`text-sm line-clamp-2 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                              <TextWithGlossary text={item.text} darkMode={darkMode} />
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col items-center gap-3 ml-2">
-                        {/* Botón de Guardar */}
-                        <button
-                          onClick={(e) => toggleSave(e, item.id)}
-                          className="p-1 rounded-full hover:bg-slate-100 transition-colors focus:outline-none"
-                          title={savedIds.includes(item.id) ? "Quitar de guardados" : "Guardar para después"}
-                        >
-                          <Star
-                            className={`w-6 h-6 transition-colors ${savedIds.includes(item.id) ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`}
-                          />
-                        </button>
-                        <div className={darkMode ? 'text-slate-500' : 'text-slate-400'}>
-                          {expandedId === item.id ? <ChevronUp /> : <ChevronDown />}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Expanded Content */}
-                    {expandedId === item.id && (
-                      <div className="px-5 pb-6 pt-0 animate-fadeIn">
-                        <hr className={`${darkMode ? 'border-slate-700' : 'border-slate-100'} my-4`} />
-
-                        {/* Sección: Aplicación Práctica */}
-                        <div className={`${darkMode ? 'bg-emerald-900/20 border-emerald-800/50' : 'bg-emerald-50 border-emerald-100'} rounded-lg p-4 mb-4 border`}>
-                          <h4 className={`text-sm font-bold uppercase tracking-wide mb-2 flex items-center gap-2 ${darkMode ? 'text-emerald-400' : 'text-emerald-800'}`}>
-                            <Info className="w-4 h-4" />
-                            En la vida diaria
-                          </h4>
-                          <p className={`text-sm leading-relaxed ${darkMode ? 'text-emerald-200' : 'text-emerald-900'}`}>
-                            {item.application}
-                          </p>
-                        </div>
-
-                        {/* Sección: Texto Original con Glosario */}
-                        <div className={`${darkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-200'} rounded-lg p-4 border mb-4`}>
-                          <h4 className={`text-[10px] font-bold uppercase tracking-wide mb-2 flex justify-between items-center ${darkMode ? 'text-slate-500' : 'text-slate-500'}`}>
-                            <span>Texto Constitucional</span>
-                            <span className={`text-[10px] font-normal normal-case px-2 py-0.5 rounded ${darkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-200 text-slate-600'}`}>
-                              Pasá el mouse sobre el texto azul
-                            </span>
-                          </h4>
-                          <p className={`text-sm font-serif italic leading-relaxed ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>
-                            "<TextWithGlossary text={item.text} darkMode={darkMode} />"
-                          </p>
-                        </div>
-
-                        {/* Botón de Compartir WhatsApp */}
-                        <div className="flex justify-end">
-                          <button
-                            onClick={() => shareOnWhatsApp(item)}
-                            className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors shadow-sm"
-                          >
-                            <MessageCircle className="w-4 h-4" />
-                            Compartir en WhatsApp
-                          </button>
-                        </div>
-
-                      </div>
+                    {selectedCategory === 'Mis Guardados' ? (
+                      <>
+                        <Star className="w-12 h-12 mx-auto mb-3 opacity-30 text-amber-500" />
+                        <p className="text-lg">Todavía no tenés artículos guardados.</p>
+                        <p className="text-sm">Tocá la estrella en los artículos para leerlos después.</p>
+                      </>
+                    ) : (
+                      <>
+                        <Info className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                        <p className="text-lg">No encontramos artículos relacionados.</p>
+                        <p className="text-sm">Intentá con palabras como "trabajo", "familia", "libertad".</p>
+                      </>
                     )}
-                  </div>
-                ))
-              )}
+                  </motion.div>
+                ) : (
+                  filteredArticles.map((item) => (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.3 }}
+                      key={item.id}
+                      className={`${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} rounded-xl shadow-sm border overflow-hidden transition-all duration-300 ${expandedId === item.id ? 'ring-2 ring-sky-500/50 shadow-md' : 'hover:shadow-md'}`}
+                    >
+                      {/* Card Header (Always visible) */}
+                      <div
+                        className="p-5 cursor-pointer flex items-start justify-between"
+                        onClick={() => toggleExpand(item.id)}
+                      >
+                        <div className="flex items-start gap-4 flex-1">
+                          <motion.div
+                            whileHover={{ scale: 1.1 }}
+                            className={`p-3 rounded-lg mt-1 shrink-0 transition-colors ${expandedId === item.id ? 'bg-sky-500 text-white' : 'bg-sky-100 text-sky-600'}`}
+                          >
+                            {item.icon}
+                          </motion.div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <span className="font-bold text-sky-700">{item.article}</span>
+                              <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full border border-slate-200">
+                                {item.category}
+                              </span>
+                            </div>
+                            <h3 className={`text-lg font-semibold leading-tight mb-2 ${darkMode ? 'text-slate-100' : 'text-slate-800'}`}>
+                              {item.explanation}
+                            </h3>
+                            {!expandedId && (
+                              <p className={`text-sm line-clamp-2 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                <TextWithGlossary text={item.text} darkMode={darkMode} />
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-center gap-3 ml-2">
+                          {/* Botón de Guardar */}
+                          <motion.button
+                            whileHover={{ scale: 1.2 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={(e) => toggleSave(e, item.id)}
+                            className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors focus:outline-none"
+                            title={savedIds.includes(item.id) ? "Quitar de guardados" : "Guardar para después"}
+                          >
+                            <Star
+                              className={`w-6 h-6 transition-colors ${savedIds.includes(item.id) ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`}
+                            />
+                          </motion.button>
+                          <motion.div
+                            animate={{ rotate: expandedId === item.id ? 180 : 0 }}
+                            className={darkMode ? 'text-slate-500' : 'text-slate-400'}
+                          >
+                            <ChevronDown />
+                          </motion.div>
+                        </div>
+                      </div>
+
+                      {/* Expanded Content */}
+                      <AnimatePresence>
+                        {expandedId === item.id && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3, ease: 'easeInOut' }}
+                            className="overflow-hidden"
+                          >
+                            <div className="px-5 pb-6 pt-0">
+                              <hr className={`${darkMode ? 'border-slate-700' : 'border-slate-100'} my-4`} />
+
+                              {/* Sección: Aplicación Práctica */}
+                              <div className={`${darkMode ? 'bg-emerald-900/20 border-emerald-800/50' : 'bg-emerald-50 border-emerald-100'} rounded-lg p-4 mb-4 border`}>
+                                <h4 className={`text-sm font-bold uppercase tracking-wide mb-2 flex items-center gap-2 ${darkMode ? 'text-emerald-400' : 'text-emerald-800'}`}>
+                                  <Info className="w-4 h-4" />
+                                  En la vida diaria
+                                </h4>
+                                <p className={`text-sm leading-relaxed ${darkMode ? 'text-emerald-200' : 'text-emerald-900'}`}>
+                                  {item.application}
+                                </p>
+                              </div>
+
+                              {/* Sección: Texto Original con Glosario */}
+                              <div className={`${darkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-200'} rounded-lg p-4 border mb-4`}>
+                                <h4 className={`text-[10px] font-bold uppercase tracking-wide mb-2 flex justify-between items-center ${darkMode ? 'text-slate-500' : 'text-slate-500'}`}>
+                                  <span>Texto Constitucional</span>
+                                  <span className={`text-[10px] font-normal normal-case px-2 py-0.5 rounded ${darkMode ? 'bg-slate-800 text-slate-400' : 'bg-slate-200 text-slate-600'}`}>
+                                    Pasá el mouse sobre el texto azul
+                                  </span>
+                                </h4>
+                                <p className={`text-sm font-serif italic leading-relaxed ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                                  "<TextWithGlossary text={item.text} darkMode={darkMode} />"
+                                </p>
+                              </div>
+
+                              {/* Botón de Compartir WhatsApp */}
+                              <div className="flex justify-end">
+                                <motion.button
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => shareOnWhatsApp(item)}
+                                  className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors shadow-sm"
+                                >
+                                  <MessageCircle className="w-4 h-4" />
+                                  Compartir en WhatsApp
+                                </motion.button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  ))
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Footer Monetization / Support */}
@@ -386,14 +421,24 @@ export default function App() {
                   </p>
 
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="#" className="flex items-center justify-center gap-2 bg-slate-900 text-white px-6 py-2.5 rounded-full font-medium text-sm hover:bg-slate-800 transition-colors">
+                    <motion.a
+                      whileHover={{ scale: 1.05, backgroundColor: darkMode ? '#1e293b' : '#1e293b' }}
+                      whileTap={{ scale: 0.95 }}
+                      href="#"
+                      className={`flex items-center justify-center gap-2 ${darkMode ? 'bg-slate-700' : 'bg-slate-900'} text-white px-6 py-2.5 rounded-full font-medium text-sm transition-colors`}
+                    >
                       <Coffee className="w-4 h-4" />
                       Invitar un Cafecito
-                    </a>
-                    <a href="#" className="flex items-center justify-center gap-2 bg-white text-slate-700 border border-slate-200 px-6 py-2.5 rounded-full font-medium text-sm hover:bg-slate-50 transition-colors">
+                    </motion.a>
+                    <motion.a
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      href="#"
+                      className={`flex items-center justify-center gap-2 ${darkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-white text-slate-700 border-slate-200'} border px-6 py-2.5 rounded-full font-medium text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors`}
+                    >
                       <FileText className="w-4 h-4" />
                       Descargar Resumen PDF (Premium)
-                    </a>
+                    </motion.a>
                   </div>
                 </div>
 

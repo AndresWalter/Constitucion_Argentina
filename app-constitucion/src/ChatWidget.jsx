@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader2, Lightbulb } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Groq from 'groq-sdk';
 import { SUGGESTED_QUESTIONS } from './data';
 const isProduction = import.meta.env.PROD;
@@ -138,8 +139,10 @@ export default function ChatWidget({ constitutionText, darkMode }) {
                                     <span>Preguntas frecuentes:</span>
                                 </div>
                                 <div className="grid grid-cols-1 gap-2">
-                                    {SUGGESTED_QUESTIONS.slice(0, 4).map((sq, idx) => (
-                                        <button
+                                    {SUGGESTED_QUESTIONS.slice(0, 6).map((sq, idx) => (
+                                        <motion.button
+                                            whileHover={{ x: 5 }}
+                                            whileTap={{ scale: 0.98 }}
                                             key={idx}
                                             onClick={() => sendSuggestedQuestion(sq.question)}
                                             className={`text-left border rounded-lg p-2.5 text-xs transition-colors flex items-center gap-2 ${darkMode
@@ -149,7 +152,7 @@ export default function ChatWidget({ constitutionText, darkMode }) {
                                         >
                                             <span className="text-base">{sq.emoji}</span>
                                             <span>{sq.question}</span>
-                                        </button>
+                                        </motion.button>
                                     ))}
                                 </div>
                             </div>

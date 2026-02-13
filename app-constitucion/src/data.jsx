@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Briefcase, Scale, Home, Shield, Sun, Leaf, ShoppingCart, AlertCircle } from 'lucide-react';
+import { BookOpen, Briefcase, Scale, Home, Shield, Sun, Leaf, ShoppingCart, AlertCircle, Users, FileText, Heart } from 'lucide-react';
 
 export const GLOSSARY = {
     "hábeas corpus": "Acción judicial urgente para recuperar la libertad física si fuiste detenido ilegalmente.",
@@ -74,6 +74,17 @@ export const CONSTITUTION_DATA = [
         lifeSituation: ['Justicia']
     },
     {
+        id: '18',
+        article: 'Artículo 18',
+        category: 'Garantías Judiciales',
+        icon: <Shield className="w-5 h-5" />,
+        text: 'Ningún habitante de la Nación puede ser penado sin juicio previo fundado en ley anterior al hecho del proceso, ni juzgado por comisiones especiales... Es inviolable la defensa en juicio de la persona y de los derechos. El domicilio es inviolable...',
+        explanation: 'Nadie puede ir preso sin un juicio justo. Tenés derecho a un abogado y a que nadie entre a tu casa sin una orden de un juez.',
+        application: 'Si la policía quiere entrar a tu casa, debe mostrarte una orden de allanamiento firmada por un juez. Si te acusan de algo, el Estado debe darte un abogado gratis si no podés pagarlo.',
+        keywords: ['juicio', 'abogado', 'preso', 'cárcel', 'allanamiento', 'casa', 'policía', 'defensa'],
+        lifeSituation: ['Justicia', 'Emergencias']
+    },
+    {
         id: '19',
         article: 'Artículo 19',
         category: 'Libertad Personal',
@@ -83,6 +94,61 @@ export const CONSTITUTION_DATA = [
         application: 'El Estado no puede decirte cómo vestirte dentro de tu casa o qué pensar. Si no hay una ley que prohíba explícitamente una actividad, sos libre de realizarla.',
         keywords: ['privacidad', 'intimidad', 'prohibido', 'ley', 'moral', 'permitido', 'legal', 'ilegal'],
         lifeSituation: ['Justicia']
+    },
+    {
+        id: '20',
+        article: 'Artículo 20',
+        category: 'Derechos Civiles',
+        icon: <BookOpen className="w-5 h-5" />,
+        text: 'Los extranjeros gozan en el territorio de la Nación de todos los derechos civiles del ciudadano; pueden ejercer su industria, comercio y profesión; poseer bienes raíces, comprarlos y enajenarlos; navegar los ríos y costas; ejercer libremente su culto; testar y casarse conforme a las leyes.',
+        explanation: 'En Argentina, los extranjeros tienen los mismos derechos civiles que los argentinos. No hace falta ser ciudadano para trabajar, comprar una casa o casarse.',
+        application: 'Si sos extranjero, podés abrir una cuenta bancaria, alquilar un departamento o trabajar legalmente. No te pueden cobrar impuestos extra solo por no ser argentino.',
+        keywords: ['extranjero', 'turista', 'migrante', 'derechos', 'trabajar', 'casarse', 'comprar', 'propiedad'],
+        lifeSituation: ['Justicia', 'Trabajo']
+    },
+    {
+        id: '28',
+        article: 'Artículo 28',
+        category: 'Garantías',
+        icon: <Scale className="w-5 h-5" />,
+        text: 'Los principios, garantías y derechos reconocidos en los anteriores artículos, no podrán ser alterados por las leyes que reglamenten su ejercicio.',
+        explanation: 'Las leyes pueden regular cómo se ejercen tus derechos, pero no pueden "anularlos" o cambiarlos tanto que dejen de existir.',
+        application: 'Si una ley dice que tenés derecho a protestar pero pone tantas condiciones que en la práctica es imposible hacerlo, esa ley es inconstitucional porque altera el derecho base.',
+        keywords: ['ley', 'derechos', 'límite', 'regulación', 'inconstitucional'],
+        lifeSituation: ['Justicia']
+    },
+    {
+        id: '37',
+        article: 'Artículo 37',
+        category: 'Derechos Políticos',
+        icon: <Shield className="w-5 h-5" />,
+        text: 'Esta Constitución garantiza el pleno ejercicio de los derechos políticos... El sufragio es universal, igual, secreto y obligatorio. La igualdad real de oportunidades entre varones y mujeres para el acceso a cargos electivos y partidarios se garantizará...',
+        explanation: 'Garantiza el derecho a votar y a ser votado. Asegura que hombres y mujeres tengan las mismas chances de ocupar cargos políticos.',
+        application: 'Nadie puede obligarte a decir por quién votaste (voto secreto). Si querés postularte para un cargo público, la ley debe asegurar que haya cupos o paridad de género para que la competencia sea justa.',
+        keywords: ['voto', 'elecciones', 'mujer', 'política', 'partido', 'sufragio', 'votar'],
+        lifeSituation: ['Justicia', 'Participación']
+    },
+    {
+        id: '38',
+        article: 'Artículo 38',
+        category: 'Derechos Políticos',
+        icon: <Users className="w-5 h-5" />,
+        text: 'Los partidos políticos son instituciones fundamentales del sistema democrático... El Estado contribuye al sostenimiento económico de sus actividades... deberán dar publicidad del origen y destino de sus fondos...',
+        explanation: 'Los partidos políticos son necesarios para la democracia. El Estado los ayuda con plata, pero ellos tienen que contar de dónde sacan el resto del dinero.',
+        application: 'Cualquier ciudadano puede saber quién financió la campaña de un político. Los partidos deben ser transparentes con sus gastos.',
+        keywords: ['partido', 'política', 'plata', 'fondos', 'democracia', 'campaña'],
+        lifeSituation: ['Participación']
+    },
+    {
+        id: '39',
+        article: 'Artículo 39',
+        category: 'Derechos Políticos',
+        icon: <FileText className="w-5 h-5" />,
+        text: 'Los ciudadanos tienen el derecho de iniciativa para presentar proyectos de ley en la Cámara de Diputados. El Congreso deberá darles expreso tratamiento dentro del término de doce meses.',
+        explanation: 'No hace falta ser diputado para proponer una ley. Si juntas suficientes firmas, el Congreso está obligado a tratar tu propuesta.',
+        application: 'Si vos y tus vecinos tienen una idea para mejorar el país, pueden redactar un proyecto de ley y, si consiguen el apoyo necesario del padrón, el Congreso no puede ignorarlo.',
+        keywords: ['ley', 'proyecto', 'firmas', 'ciudadano', 'proponer', 'iniciativa'],
+        lifeSituation: ['Participación']
     },
     {
         id: '41',
@@ -102,7 +168,7 @@ export const CONSTITUTION_DATA = [
         icon: <ShoppingCart className="w-5 h-5" />,
         text: 'Los consumidores y usuarios de bienes y servicios tienen derecho, en la relación de consumo, a la protección de su salud, seguridad e intereses económicos; a una información adecuada y veraz; a la libertad de elección y a condiciones de trato equitativo y digno...',
         explanation: 'Protege a quienes compran productos o contratan servicios. Exige que no te mientan sobre lo que comprás y que te traten con respeto.',
-        application: 'Si comprás un electrodoméstico fallado y no te reconocen la garantía, o si una empresa de teléfono te cobra cosas que no pediste, este artículo te ampara. También obliga a que las etiquetas de los alimentos digan la verdad.',
+        application: 'Si comprás un electrodoméstico fallado y no te reconoceren la garantía, o si una empresa de teléfono te cobra cosas que no pediste, este artículo te ampara. También obliga a que las etiquetas de los alimentos digan la verdad.',
         keywords: ['consumidor', 'compra', 'garantía', 'información', 'servicios', 'estafa', 'producto', 'defectuoso', 'engaño', 'publicidad falsa'],
         lifeSituation: ['Consumo']
     },
@@ -115,21 +181,43 @@ export const CONSTITUTION_DATA = [
         explanation: 'Crea herramientas rápidas (Amparo y Hábeas Corpus) para cuando no hay tiempo para un juicio largo. El amparo es para derechos generales y el hábeas corpus para la libertad física.',
         application: 'Si una obra social se niega a cubrirte un medicamento urgente, presentás un "Amparo". Si detienen a un familiar ilegalmente y no sabés dónde está, presentás un "Hábeas Corpus" para que un juez averigüe inmediatamente su paradero.',
         keywords: ['amparo', 'habeas corpus', 'urgencia', 'salud', 'detención', 'medicamento', 'obra social', 'hospital', 'emergencia'],
-        lifeSituation: ['Salud', 'Justicia']
+        lifeSituation: ['Salud', 'Justicia', 'Emergencias']
+    },
+    {
+        id: '75-17',
+        article: 'Artículo 75, inciso 17',
+        category: 'Igualdad',
+        icon: <Scale className="w-5 h-5" />,
+        text: 'Reconocer la preexistencia étnica y cultural de los pueblos indígenas argentinos. Garantizar el respeto a su identidad y el derecho a una educación bilingüe e intercultural; reconocer la personería jurídica de sus comunidades, y la posesión y propiedad comunitarias de las tierras que tradicionalmente ocupan...',
+        explanation: 'Reconoce oficialmente que los pueblos indígenas estaban acá antes que el Estado y protege sus tierras y su cultura.',
+        application: 'Las comunidades indígenas tienen derecho a que se les devuelvan sus tierras ancestrales y a que sus hijos estudien en su propia lengua además del castellano.',
+        keywords: ['indígena', 'comunidad', 'tierras', 'cultura', ' bilingüe', 'identidad', 'pueblos'],
+        lifeSituation: ['Educación', 'Justicia']
+    },
+    {
+        id: '75-23',
+        article: 'Artículo 75, inciso 23',
+        category: 'Igualdad',
+        icon: <Heart className="w-5 h-5" />,
+        text: 'Legislar y promover medidas de acción positiva que garanticen la igualdad real de oportunidades... en particular respecto de los niños, las mujeres, los ancianos y las personas con discapacidad.',
+        explanation: 'Obliga al Congreso a hacer leyes especiales para proteger a los grupos que suelen estar en desventaja.',
+        application: 'Este artículo apoya las leyes de jubilación, los subsidios por discapacidad, la protección contra la violencia de género y los planes de salud para la infancia.',
+        keywords: ['niños', 'mujeres', 'ancianos', 'discapacidad', 'igualdad', 'protección', 'vulnerables'],
+        lifeSituation: ['Familia', 'Salud']
     }
 ];
 
 export const CATEGORIES = ['Todos', 'Derechos Civiles', 'Trabajo y Seguridad Social', 'Justicia y Privacidad', 'Propiedad', 'Igualdad', 'Ambiente', 'Consumidores'];
 
-export const LIFE_SITUATIONS = ['Todas', '💼 Trabajo', '🏠 Vivienda', '👨‍👩‍👧 Familia', '🎓 Educación', '🏥 Salud', '⚖️ Justicia', '🌍 Ambiente', '🛒 Consumo'];
+export const LIFE_SITUATIONS = ['Todas', '💼 Trabajo', '🏠 Vivienda', '👨‍👩‍👧 Familia', '🎓 Educación', '🏥 Salud', '⚖️ Justicia', '🌍 Ambiente', '🛒 Consumo', '🚨 Emergencias', '🗳️ Participación'];
 
 export const SUGGESTED_QUESTIONS = [
+    { category: "Justicia", question: "¿Qué necesito para que la policía no entre a mi casa?", emoji: "⚖️" },
+    { category: "Participación", question: "¿Cómo puedo proponer una ley al Congreso?", emoji: "🗳️" },
+    { category: "Emergencias", question: "¿Qué es un Hábeas Corpus y cuándo se usa?", emoji: "�" },
+    { category: "Igualdad", question: "¿Qué derechos tienen los pueblos indígenas?", emoji: "🤝" },
     { category: "Trabajo", question: "¿Qué hacer si me despiden sin justa causa?", emoji: "💼" },
     { category: "Vivienda", question: "¿Puede el dueño entrar a mi alquiler sin avisar?", emoji: "🏠" },
-    { category: "Familia", question: "¿Cuáles son mis derechos si tengo un hijo?", emoji: "👶" },
-    { category: "Educación", question: "¿La educación pública es realmente gratuita?", emoji: "🎓" },
-    { category: "Salud", question: "¿Puedo negarme a un tratamiento médico?", emoji: "🏥" },
-    { category: "Justicia", question: "¿Qué hacer si la policía me detiene sin razón?", emoji: "⚖️" },
-    { category: "Ambiente", question: "¿Cómo denuncio contaminación en mi barrio?", emoji: "🌍" },
-    { category: "Consumo", question: "¿Qué hago si un producto sale defectuoso?", emoji: "🛒" }
+    { category: "Consumo", question: "¿Qué hago si una empresa me miente en la publicidad?", emoji: "🛒" },
+    { category: "Ambiente", question: "¿Cómo denuncio contaminación en mi barrio?", emoji: "🌍" }
 ];

@@ -1,30 +1,67 @@
-# Constitución Ciudadana App
+# Constitución Nacional Argentina - App Moderna
 
-Aplicación web moderna para consultar la Constitución Nacional Argentina, con asistente IA integrado.
+## 🎨 Diseño
 
-## Características
-- **Búsqueda Inteligente**: Encuentra artículos por palabras clave o situaciones de la vida real.
-- **Asistente Constitucional**: Chatbot potenciado por Groq (Llama 3) que responde dudas basándose exclusivamente en el texto constitucional.
-- **Monetización Ética**: Opciones para "Cafecito" y descargas premium.
-- **Favoritos**: Guarda artículos para leer después.
+Esta aplicación utiliza una identidad visual premium enfocada en el sector legal:
 
-## Instalación
-1. Clonar o descargar este repositorio.
-2. Instalar dependencias:
-   ```bash
-   npm install
-   ```
-3. Iniciar el servidor de desarrollo:
-   ```bash
-   npm run dev
-   ```
+### Paleta de Colores
+- **Azul Noche** (`#181B2E`): Color principal para headers y branding
+- **Dorado Premium** (`#C59D71`): Acentos, botones CTA y elementos destacados
+- **Gris Claro** (`#F5F6F8`): Fondo de contenido para lectura
+- **Textos**: `#2D3436` (títulos), `#9DA5B4` (secundario)
 
-## Configuración
-- La API Key de Groq está configurada en `src/ChatWidget.jsx`.
-- El texto completo de la constitución está en `src/assets/constitution.md`.
+### Tipografía
+- **Sans-serif**: Inter & Poppins (UI, botones, navegación)
+- **Serif**: Merriweather (contenido legal, artículos)
 
-## Tecnologías
-- React + Vite
-- Tailwind CSS
-- Groq SDK
-- Lucide React (Iconos)
+### Componentes Reutilizables
+- **Button**: Botones con bordes redondeados tipo "píldora" (50px)
+- **Card**: Tarjetas con sombras suaves y efectos hover
+- **SearchBar**: Barra de búsqueda con efecto glassmorphism
+
+## 🚀 Desarrollo
+
+```bash
+# Instalar dependencias
+npm install
+
+# Ejecutar servidor de desarrollo
+npm run dev
+
+# Build para producción
+npm run build
+```
+
+## 📦 Estructura del Proyecto
+
+```
+src/
+├── components/
+│   └── ui/
+│       ├── Button.jsx
+│       ├── Card.jsx
+│       └── SearchBar.jsx
+├── lib/
+│   └── utils.js
+├── App.jsx (Versión original)
+├── AppModern.jsx (Nueva versión con diseño premium)
+└── main.jsx
+```
+
+## 🎯 Características Planificadas
+
+- [ ] Sistema de Favoritos (localStorage)
+- [ ] Lectura por Voz (TTS - Web Speech API)
+- [ ] Copiar Texto con feedback
+- [ ] Disclaimer Legal al inicio
+- [ ] Política de Privacidad
+- [ ] Integración con Capacitor (Android)
+- [ ] Publicidad (AdMob)
+
+## 📱 Próximos Pasos
+
+1. Configurar Capacitor para Android (API 36)
+2. Implementar funcionalidades offline
+3. Añadir sistema de favoritos
+4. Integrar TTS para lectura de artículos
+5. Crear disclaimers y políticas legales

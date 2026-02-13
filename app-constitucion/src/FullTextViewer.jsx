@@ -240,22 +240,25 @@ export default function FullTextViewer({ constitutionText, darkMode }) {
                                         </h2>
                                     </div>
                                 ) : (
-                                    <div className="flex gap-2 items-start mb-4">
-                                        <div className={`p-2 rounded-lg mt-1 ${darkMode ? 'bg-sky-900/30 text-sky-400' : 'bg-sky-100 text-sky-700'}`}>
-                                            <Bookmark className={`w-5 h-5 ${darkMode ? 'fill-sky-400' : 'fill-sky-700'}`} />
+                                    <div className="flex gap-4 items-start mb-6">
+                                        <div className={`p-2.5 rounded-xl mt-1 shadow-sm ${darkMode ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'bg-sky-50 text-sky-700 border border-sky-100'}`}>
+                                            <Bookmark className={`w-5 h-5 ${darkMode ? 'fill-sky-400/20' : 'fill-sky-700/10'}`} />
                                         </div>
-                                        <h3 className={`font-sans font-bold m-0 ${darkMode ? 'text-slate-100' : 'text-slate-900'}`} style={{ fontSize: `${fontSize * 1.25}px` }}>
+                                        <h3 className={`font-sans font-bold m-0 tracking-tight leading-tight ${darkMode ? 'text-slate-100' : 'text-slate-900'}`} style={{ fontSize: `${fontSize * 1.3}px` }}>
                                             {section.title}
                                         </h3>
                                     </div>
                                 )}
 
-                                <div className="space-y-4">
+                                <div className={`space-y-6 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                                     {section.content.map((text, tidx) => text ? (
-                                        <p key={tidx} className={`${text.match(/^ARTÍCULO/) ? (darkMode ? 'font-bold text-slate-100' : 'font-bold text-slate-900') : ''} leading-relaxed`}>
+                                        <p key={tidx} className={`
+                                            ${text.match(/^ARTÍCULO/) ? (darkMode ? 'font-bold text-slate-100 text-lg border-l-4 border-sky-500 pl-4 py-1 my-6' : 'font-bold text-slate-900 text-lg border-l-4 border-sky-600 pl-4 py-1 my-6') : ''} 
+                                            leading-relaxed text-justify hyphens-auto
+                                        `}>
                                             {text.replace(/^ARTÍCULO\s\d+\.-/, '').trim()}
                                         </p>
-                                    ) : <div key={tidx} className="h-2" />)}
+                                    ) : <div key={tidx} className="h-4" />)}
                                 </div>
 
                                 {/* NAVEGACION MINI */}
