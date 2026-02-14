@@ -1,12 +1,48 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Home, FileText, Heart, Menu, X, Star, Search as SearchIcon, BookText, Filter, Sun } from 'lucide-react';
+import { Home, FileText, Heart, Menu, X, Star, Search as SearchIcon, BookText, Filter, Sun, Moon, MessageCircle, Coffee, ShieldCheck, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardTitle, CardDescription } from './components/ui/Card';
 import { SearchBar } from './components/ui/SearchBar';
 import { Button } from './components/ui/Button';
-import { CONSTITUTION_DATA, CATEGORIES, LIFE_SITUATIONS } from './data';
+import { CONSTITUTION_DATA, CATEGORIES, LIFE_SITUATIONS, GLOSSARY } from './data';
+import ChatWidget from './ChatWidget';
 import FullTextViewer from './FullTextViewer';
 import constitutionText from './assets/constitution.md?raw';
+
+// Componente para resaltar términos del glosario con Tooltip Premium
+const TextWithGlossary = ({ text, darkMode }) => {
+    if (!text) return null;
+
+    const terms = Object.keys(GLOSSARY).sort((a, b) => b.length - a.length);
+    const regex = new RegExp(`(${terms.join('|')})`, 'gi');
+    const parts = text.split(regex);
+
+    return (
+        <span>
+            {parts.map((part, index) => {
+                const termLower = part.toLowerCase();
+                if (GLOSSARY[termLower]) {
+                    return (
+                        <span key={index} className="group relative inline-block cursor-help text-legal-gold font-bold border-b-2 border-dotted border-legal-gold/40 hover:border-legal-gold transition-colors">
+                            {part}
+                            {/* Tooltip Pro */}
+                            <span className="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-300 absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 bg-legal-blue text-white text-xs rounded-2xl z-[100] shadow-2xl pointer-events-none border border-white/10 backdrop-blur-xl">
+                                <div className="font-black uppercase tracking-widest text-[10px] text-legal-gold mb-2 flex items-center gap-2">
+                                    <ShieldCheck size={12} /> Definición Legal
+                                </div>
+                                <div className="leading-relaxed font-medium">
+                                    {GLOSSARY[termLower]}
+                                </div>
+                                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-legal-blue rotate-45 border-r border-b border-white/10" />
+                            </span>
+                        </span>
+                    );
+                }
+                return part;
+            })}
+        </span>
+    );
+};
 
 export default function AppModern() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -15,6 +51,14 @@ export default function AppModern() {
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [selectedLifeSituation, setSelectedLifeSituation] = useState('Todas');
     const [expandedId, setExpandedId] = useState(null);
+    const [darkMode, setDarkMode] = useState(() => {
+        try {
+            const saved = localStorage.getItem('darkMode');
+            return saved ? JSON.parse(saved) : false;
+        } catch (e) {
+            return false;
+        }
+    });
 
     // Sistema de favoritos
     const [savedIds, setSavedIds] = useState(() => {
@@ -30,11 +74,27 @@ export default function AppModern() {
         localStorage.setItem('savedConstitucion', JSON.stringify(savedIds));
     }, [savedIds]);
 
+    useEffect(() => {
+        localStorage.setItem('darkMode', JSON.stringify(darkMode));
+        if (darkMode) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    }, [darkMode]);
+
     const toggleSave = (e, id) => {
         e.stopPropagation();
         setSavedIds(prev =>
             prev.includes(id) ? prev.filter(savedId => savedId !== id) : [...prev, id]
         );
+    };
+
+    const shareOnWhatsApp = (e, item) => {
+        e.stopPropagation();
+        const message = `🏛️ *Constitución Ciudadana*\n\n📌 *${item.article}:* ${item.explanation}\n\n💡 *En la vida diaria:* ${item.application}\n\n👉 ¡Conocé tus derechos!`;
+        const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
     };
 
     const toggleCategory = (cat) => {
@@ -68,14 +128,9 @@ export default function AppModern() {
             if (activeTab === 'favorites') {
                 matchesCategory = savedIds.includes(item.id);
             } else {
-                // Filtro por categorías jurídicas (Multiselección)
                 const matchesLegalCat = selectedCategories.length === 0 || selectedCategories.includes(item.category);
-
-                // Filtro por Momentos de Vida
-                // Limpiamos el emoji para comparar con el array de strings en data.jsx
                 const cleanLifeSit = selectedLifeSituation.includes(' ') ? selectedLifeSituation.split(' ')[1] : selectedLifeSituation;
                 const matchesLifeSit = selectedLifeSituation === 'Todas' || (item.lifeSituation && item.lifeSituation.includes(cleanLifeSit));
-
                 matchesCategory = matchesLegalCat && matchesLifeSit;
             }
 
@@ -88,7 +143,7 @@ export default function AppModern() {
     };
 
     return (
-        <div className="min-h-screen bg-legal-gray font-sans">
+        <div className={`min-h-screen font-sans transition-colors duration-500 ${darkMode ? 'bg-legal-blue-dark text-slate-100' : 'bg-legal-gray text-legal-gray-text'}`}>
             <header className="bg-gradient-to-br from-legal-blue via-legal-blue-light to-legal-blue-dark text-white relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-radial from-white/5 to-transparent animate-pulse opacity-30"></div>
 
@@ -96,27 +151,34 @@ export default function AppModern() {
                     <div className="flex justify-between items-center mb-8">
                         <button
                             onClick={() => setMenuOpen(!menuOpen)}
-                            className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                            className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 transition-all hover:scale-110 active:scale-90"
                         >
                             {menuOpen ? <X size={24} /> : <Menu size={24} />}
                         </button>
-                        <div className="flex items-center gap-3">
+
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => setDarkMode(!darkMode)}
+                                className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 transition-all hover:rotate-12"
+                            >
+                                {darkMode ? <Sun size={24} className="text-legal-gold" /> : <Moon size={24} />}
+                            </button>
                             <motion.div
                                 initial={{ rotate: -10 }}
                                 animate={{ rotate: 10 }}
                                 transition={{ repeat: Infinity, repeatType: 'reverse', duration: 2 }}
-                                className="w-10 h-10 rounded-full bg-legal-gold flex items-center justify-center shadow-lg"
+                                className="w-12 h-12 rounded-2xl bg-legal-gold flex items-center justify-center shadow-[0_0_30px_rgba(197,157,113,0.5)]"
                             >
-                                <span className="text-white text-xl">⚖️</span>
+                                <span className="text-white text-2xl">⚖️</span>
                             </motion.div>
                         </div>
                     </div>
 
                     <div className="text-center mb-8">
-                        <h1 className="text-4xl md:text-6xl font-black mb-3 tracking-tight">
+                        <h1 className="text-4xl md:text-6xl font-black mb-3 tracking-tight italic">
                             Constitución <span className="text-legal-gold">Ciudadana</span>
                         </h1>
-                        <p className="text-white/80 text-lg font-medium">
+                        <p className="text-white/80 text-lg font-bold tracking-wide">
                             Tu respaldo legal en momentos cotidianos
                         </p>
                     </div>
@@ -137,20 +199,20 @@ export default function AppModern() {
                         <motion.section
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="mb-10"
+                            className="mb-14"
                         >
-                            <h2 className="text-2xl font-black text-legal-gray-text mb-6 flex items-center gap-2">
-                                <span className="bg-legal-gold/20 p-2 rounded-lg text-lg">🚀</span>
+                            <h2 className={`text-2xl font-black mb-8 flex items-center gap-3 ${darkMode ? 'text-white' : 'text-legal-gray-text'}`}>
+                                <span className="bg-legal-gold/20 p-2.5 rounded-2xl text-xl">🚀</span>
                                 Momentos de Vida
                             </h2>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                                 {LIFE_SITUATIONS.filter(s => s !== 'Todas').map((situation, index) => {
                                     const emoji = situation.split(' ')[0];
                                     const label = situation.split(' ').slice(1).join(' ');
                                     return (
                                         <motion.div
                                             key={index}
-                                            whileHover={{ y: -5, scale: 1.02 }}
+                                            whileHover={{ y: -8, scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
                                             onClick={() => {
                                                 setSelectedLifeSituation(situation);
@@ -159,11 +221,11 @@ export default function AppModern() {
                                             }}
                                             className="cursor-pointer"
                                         >
-                                            <Card className="p-6 h-full flex flex-col items-center text-center justify-center border-2 border-transparent hover:border-legal-gold/30 group transition-all duration-300">
-                                                <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">
+                                            <Card className={`p-8 h-full flex flex-col items-center text-center justify-center border-2 border-transparent hover:border-legal-gold/40 group transition-all duration-300 shadow-xl ${darkMode ? 'bg-legal-blue border-white/5' : 'bg-white'}`}>
+                                                <div className="text-6xl mb-5 group-hover:scale-125 transition-transform duration-500 drop-shadow-xl">
                                                     {emoji}
                                                 </div>
-                                                <span className="font-black text-legal-gray-text group-hover:text-legal-gold uppercase text-xs tracking-widest">
+                                                <span className={`font-black uppercase text-xs tracking-[0.2em] group-hover:text-legal-gold transition-colors ${darkMode ? 'text-slate-300' : 'text-legal-gray-text'}`}>
                                                     {label}
                                                 </span>
                                             </Card>
@@ -173,12 +235,12 @@ export default function AppModern() {
                             </div>
                         </motion.section>
 
-                        <section>
-                            <h2 className="text-2xl font-black text-legal-gray-text mb-6 flex items-center gap-2">
-                                <span className="bg-legal-gold/20 p-2 rounded-lg text-lg">✨</span>
+                        <section className="mb-16">
+                            <h2 className={`text-2xl font-black mb-8 flex items-center gap-3 ${darkMode ? 'text-white' : 'text-legal-gray-text'}`}>
+                                <span className="bg-legal-gold/20 p-2.5 rounded-2xl text-xl">✨</span>
                                 Destacados para tí
                             </h2>
-                            <Card className="divide-y divide-legal-gray overflow-hidden">
+                            <Card className={`divide-y overflow-hidden shadow-2xl ${darkMode ? 'bg-legal-blue border-white/5 divide-white/5' : 'bg-white divide-legal-gray'}`}>
                                 <div className="space-y-0">
                                     {CONSTITUTION_DATA.slice(0, 5).map((article, index) => (
                                         <motion.div
@@ -189,41 +251,52 @@ export default function AppModern() {
                                             onClick={() => {
                                                 setExpandedId(article.id === expandedId ? null : article.id);
                                             }}
-                                            className="px-6 py-6 hover:bg-legal-gray/30 transition-colors cursor-pointer group"
+                                            className={`px-8 py-8 transition-colors cursor-pointer group ${darkMode ? 'hover:bg-white/5' : 'hover:bg-legal-gray/30'}`}
                                         >
                                             <div className="flex items-start justify-between">
                                                 <div className="flex-1">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <span className="text-xs font-black text-legal-gold uppercase tracking-tighter">{article.article}</span>
+                                                    <div className="flex items-center gap-3 mb-3">
+                                                        <span className="text-xs font-black text-legal-gold uppercase tracking-widest">{article.article}</span>
                                                         <span
                                                             onClick={(e) => handleTagClick(e, article.category)}
-                                                            className="text-[10px] border border-legal-blue/10 text-legal-blue-light px-2 py-0.5 rounded-full hover:bg-legal-gold hover:text-white hover:border-legal-gold transition-all font-black uppercase"
+                                                            className={`text-[10px] border px-3 py-1 rounded-full transition-all font-black uppercase tracking-tighter ${darkMode ? 'border-white/10 text-slate-400 hover:bg-legal-gold hover:text-white' : 'border-legal-blue/10 text-legal-blue-light hover:bg-legal-gold hover:text-white'}`}
                                                         >
                                                             {article.category}
                                                         </span>
                                                     </div>
-                                                    <h4 className="font-bold text-xl text-legal-gray-text group-hover:text-legal-gold transition-colors leading-tight">
-                                                        {article.explanation}
+                                                    <h4 className={`font-bold text-2xl transition-colors leading-tight ${darkMode ? 'text-white' : 'text-legal-gray-text'} group-hover:text-legal-gold`}>
+                                                        <TextWithGlossary text={article.explanation} darkMode={darkMode} />
                                                     </h4>
                                                 </div>
-                                                <button
-                                                    onClick={(e) => toggleSave(e, article.id)}
-                                                    className="ml-4 p-2 rounded-full hover:bg-legal-gold/10 transition-colors"
-                                                >
-                                                    <Star
-                                                        className={`w-6 h-6 transition-colors ${savedIds.includes(article.id) ? 'fill-legal-gold text-legal-gold' : 'text-legal-gray-muted'
-                                                            }`}
-                                                    />
-                                                </button>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={(e) => shareOnWhatsApp(e, article)}
+                                                        className="p-3 rounded-2xl hover:bg-legal-blue/10 transition-all active:scale-90"
+                                                    >
+                                                        <Share2 className={`w-6 h-6 ${darkMode ? 'text-slate-500' : 'text-legal-gray-muted'}`} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => toggleSave(e, article.id)}
+                                                        className="p-3 rounded-2xl hover:bg-legal-gold/10 transition-all active:scale-90"
+                                                    >
+                                                        <Star
+                                                            className={`w-8 h-8 transition-colors ${savedIds.includes(article.id) ? 'fill-legal-gold text-legal-gold' : 'text-legal-gray-muted opacity-30 group-hover:opacity-100'
+                                                                }`}
+                                                        />
+                                                    </button>
+                                                </div>
                                             </div>
                                             {expandedId === article.id && (
                                                 <motion.div
                                                     initial={{ height: 0, opacity: 0 }}
                                                     animate={{ height: 'auto', opacity: 1 }}
-                                                    className="mt-4 pt-6 border-t border-legal-gray"
+                                                    className="mt-6 pt-8 border-t border-legal-gray/20"
                                                 >
-                                                    <div className="bg-legal-blue text-white rounded-2xl p-6 mb-4 shadow-xl">
-                                                        <p className="text-base italic opacity-90 leading-relaxed font-serif">"{article.text}"</p>
+                                                    <div className="bg-legal-blue text-white rounded-3xl p-8 mb-4 shadow-2xl relative overflow-hidden group/text">
+                                                        <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none group-hover/text:scale-110 transition-transform">
+                                                            <BookText size={100} />
+                                                        </div>
+                                                        <p className="text-lg italic opacity-90 leading-relaxed font-serif relative z-10 font-medium">"{article.text}"</p>
                                                     </div>
                                                 </motion.div>
                                             )}
@@ -237,20 +310,20 @@ export default function AppModern() {
 
                 {activeTab === 'articles' && (
                     <>
-                        <div className="space-y-6 mb-8">
-                            <Card className="p-6">
-                                <h3 className="font-black text-legal-gray-text mb-4 flex items-center gap-2 uppercase text-xs tracking-widest">
-                                    <span className="bg-legal-gold text-white p-1 rounded">🏠</span>
-                                    Momento de Vida
+                        <div className="space-y-8 mb-10">
+                            <Card className={`p-8 shadow-xl ${darkMode ? 'bg-legal-blue border-white/5' : 'bg-white'}`}>
+                                <h3 className={`font-black mb-6 flex items-center gap-3 uppercase text-xs tracking-[0.3em] ${darkMode ? 'text-slate-400' : 'text-legal-gray-text'}`}>
+                                    <span className="bg-legal-gold text-white p-1.5 rounded-lg shadow-lg">🏠</span>
+                                    Filtro por Momento de Vida
                                 </h3>
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-wrap gap-3">
                                     {LIFE_SITUATIONS.map((cat) => (
                                         <button
                                             key={cat}
                                             onClick={() => setSelectedLifeSituation(cat)}
-                                            className={`px-4 py-2.5 rounded-2xl text-sm font-bold transition-all ${selectedLifeSituation === cat
-                                                ? 'bg-legal-blue text-white shadow-lg scale-105'
-                                                : 'bg-white border-2 border-legal-gray text-legal-gray-text hover:border-legal-gold'
+                                            className={`px-5 py-3 rounded-2xl text-sm font-black transition-all ${selectedLifeSituation === cat
+                                                ? 'bg-legal-gold text-white shadow-[0_10px_20px_rgba(197,157,113,0.3)] scale-105'
+                                                : (darkMode ? 'bg-legal-blue-dark border-2 border-white/5 text-slate-400 hover:border-legal-gold/50' : 'bg-white border-2 border-legal-gray text-legal-gray-text hover:border-legal-gold')
                                                 }`}
                                         >
                                             {cat}
@@ -259,12 +332,12 @@ export default function AppModern() {
                                 </div>
                             </Card>
 
-                            <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4">
+                            <div className="flex gap-3 overflow-x-auto pb-6 no-scrollbar -mx-4 px-4">
                                 <button
                                     onClick={() => toggleCategory('Todos')}
-                                    className={`whitespace-nowrap px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${selectedCategories.length === 0
-                                        ? 'bg-legal-gold text-white shadow-lg'
-                                        : 'bg-white text-legal-gray-muted border-2 border-legal-gray'
+                                    className={`whitespace-nowrap px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${selectedCategories.length === 0
+                                        ? 'bg-legal-blue text-white shadow-xl scale-105'
+                                        : (darkMode ? 'bg-white/5 text-slate-500 border-2 border-white/5' : 'bg-white text-legal-gray-muted border-2 border-legal-gray')
                                         }`}
                                 >
                                     Todos los Temas
@@ -273,9 +346,9 @@ export default function AppModern() {
                                     <button
                                         key={cat}
                                         onClick={() => toggleCategory(cat)}
-                                        className={`whitespace-nowrap px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${selectedCategories.includes(cat)
-                                            ? 'bg-legal-blue text-white shadow-lg'
-                                            : 'bg-white text-legal-gray-muted border-2 border-legal-gray hover:border-legal-gold'
+                                        className={`whitespace-nowrap px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${selectedCategories.includes(cat)
+                                            ? 'bg-legal-gold text-white shadow-xl scale-105'
+                                            : (darkMode ? 'bg-white/5 text-slate-500 border-2 border-white/5 hover:border-legal-gold/30' : 'bg-white text-legal-gray-muted border-2 border-legal-gray hover:border-legal-gold')
                                             }`}
                                     >
                                         {cat}
@@ -284,48 +357,56 @@ export default function AppModern() {
                             </div>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-6">
                             {filteredArticles.length === 0 ? (
-                                <Card className="text-center py-20">
-                                    <div className="text-7xl mb-6">🕵️‍♂️</div>
-                                    <h3 className="text-2xl font-black text-legal-gray-text mb-3">Sin resultados</h3>
-                                    <p className="text-legal-gray-muted mb-8">Prueba combinando momentos de vida o borra los filtros</p>
-                                    <Button variant="outline" className="rounded-2xl px-8 py-6 font-black uppercase tracking-widest text-xs" onClick={() => {
+                                <Card className={`text-center py-24 shadow-2xl ${darkMode ? 'bg-legal-blue border-white/5' : 'bg-white'}`}>
+                                    <div className="text-8xl mb-8 filter drop-shadow-2xl">🕵️‍♂️</div>
+                                    <h3 className={`text-3xl font-black mb-4 ${darkMode ? 'text-white' : 'text-legal-gray-text'}`}>Búsqueda sin resultados</h3>
+                                    <p className="text-legal-gray-muted mb-10 text-lg">Prueba combinando momentos de vida o borra los filtros</p>
+                                    <Button variant="outline" className="rounded-3xl px-12 py-8 font-black uppercase tracking-[0.3em] text-[10px] scale-110 active:scale-95 transition-all" onClick={() => {
                                         setSelectedCategories([]);
                                         setSelectedLifeSituation('Todas');
                                         setSearchTerm('');
                                     }}>
-                                        Reiniciar Búsqueda
+                                        Reiniciar Filtros
                                     </Button>
                                 </Card>
                             ) : (
                                 filteredArticles.map((item) => (
-                                    <Card key={item.id} className="cursor-pointer border-l-8 border-transparent hover:border-legal-gold transition-all duration-300" hover={false}>
+                                    <Card key={item.id} className={`cursor-pointer border-l-[12px] transition-all duration-500 shadow-xl group/card ${expandedId === item.id ? 'border-legal-gold' : 'border-transparent hover:border-legal-gold-light'} ${darkMode ? 'bg-legal-blue border-white/5' : 'bg-white'}`} hover={false}>
                                         <div onClick={() => toggleExpand(item.id)}>
                                             <div className="flex items-start justify-between">
                                                 <div className="flex-1">
-                                                    <div className="flex items-center gap-2 mb-4">
-                                                        <span className="font-black text-legal-gold text-[10px] tracking-widest border-b-2 border-legal-gold/20 pb-1 uppercase">{item.article}</span>
+                                                    <div className="flex items-center gap-3 mb-4">
+                                                        <span className="font-black text-legal-gold text-xs tracking-widest pb-1 uppercase">{item.article}</span>
                                                         <button
                                                             onClick={(e) => handleTagClick(e, item.category)}
-                                                            className="text-[9px] bg-legal-blue/10 text-legal-blue px-3 py-1 rounded-full font-black uppercase tracking-tighter"
+                                                            className={`text-[9px] px-4 py-1.5 rounded-full font-black uppercase tracking-widest ${darkMode ? 'bg-white/5 text-slate-400 hover:text-legal-gold' : 'bg-legal-blue/5 text-legal-blue hover:text-legal-gold'}`}
                                                         >
                                                             {item.category}
                                                         </button>
                                                     </div>
-                                                    <h3 className="text-2xl font-black text-legal-gray-text leading-tight group-hover:text-legal-gold transition-colors">
-                                                        {item.explanation}
+                                                    <h3 className={`text-2xl font-black leading-tight transition-colors ${darkMode ? 'text-white' : 'text-legal-gray-text'} group-hover/card:text-legal-gold`}>
+                                                        <TextWithGlossary text={item.explanation} darkMode={darkMode} />
                                                     </h3>
                                                 </div>
-                                                <button
-                                                    onClick={(e) => toggleSave(e, item.id)}
-                                                    className="ml-4 p-2 rounded-full hover:bg-legal-gold/10 transition-colors"
-                                                >
-                                                    <Star
-                                                        className={`w-7 h-7 transition-colors ${savedIds.includes(item.id) ? 'fill-legal-gold text-legal-gold' : 'text-legal-gray-muted'
-                                                            }`}
-                                                    />
-                                                </button>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={(e) => shareOnWhatsApp(e, item)}
+                                                        className={`p-3 rounded-2xl transition-all active:scale-90 ${darkMode ? 'hover:bg-white/5' : 'hover:bg-legal-blue/5'}`}
+                                                    >
+                                                        <Share2 className={`w-6 h-6 ${darkMode ? 'text-slate-600' : 'text-legal-gray-muted'}`} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => toggleSave(e, item.id)}
+                                                        className={`ml-2 p-3 rounded-2xl transition-all active:scale-90 ${darkMode ? 'hover:bg-white/5' : 'hover:bg-legal-gold/10'}`}
+                                                    >
+                                                        <Star
+                                                            className={`w-8 h-8 transition-colors ${savedIds.includes(item.id) ? 'fill-legal-gold text-legal-gold' : 'text-legal-gray-muted opacity-20 group-hover/card:opacity-100'
+                                                                }`}
+                                                        />
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             <AnimatePresence>
@@ -334,24 +415,24 @@ export default function AppModern() {
                                                         initial={{ height: 0, opacity: 0 }}
                                                         animate={{ height: 'auto', opacity: 1 }}
                                                         exit={{ height: 0, opacity: 0 }}
-                                                        className="mt-8 overflow-hidden"
+                                                        className="mt-10 overflow-hidden"
                                                     >
-                                                        <div className="border-t-2 border-legal-gray pt-8 space-y-8">
-                                                            <div className="bg-gradient-to-br from-legal-gold/10 to-transparent rounded-[32px] p-8 relative overflow-hidden group">
-                                                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform">
-                                                                    <Sun size={64} />
+                                                        <div className="border-t-2 border-legal-gray/20 pt-10 space-y-10">
+                                                            <div className={`rounded-[40px] p-10 relative overflow-hidden group/life shadow-inner ${darkMode ? 'bg-legal-blue-dark/50' : 'bg-gradient-to-br from-legal-gold/10 to-transparent'}`}>
+                                                                <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none group-hover/life:scale-125 transition-transform duration-700">
+                                                                    <Sun size={80} />
                                                                 </div>
-                                                                <h4 className="text-[10px] font-black uppercase text-legal-gold mb-4 tracking-[0.2em] flex items-center gap-3">
-                                                                    <span className="w-8 h-px bg-legal-gold"></span>
-                                                                    Aplicación en la vida diaria
+                                                                <h4 className="text-[10px] font-black uppercase text-legal-gold mb-6 tracking-[0.4em] flex items-center gap-4">
+                                                                    <span className="w-12 h-px bg-legal-gold"></span>
+                                                                    Uso en la vida diaria
                                                                 </h4>
-                                                                <p className="text-xl text-legal-gray-text font-bold leading-relaxed relative z-10">
+                                                                <p className={`text-2xl font-bold leading-relaxed relative z-10 ${darkMode ? 'text-slate-200' : 'text-legal-gray-text'}`}>
                                                                     {item.application}
                                                                 </p>
                                                             </div>
-                                                            <div className="flex items-start gap-6 px-4">
-                                                                <div className="w-1.5 bg-legal-blue/10 self-stretch rounded-full" />
-                                                                <div className="text-base text-legal-gray-muted italic leading-loose font-serif">
+                                                            <div className="flex items-start gap-8 px-6">
+                                                                <div className="w-2 bg-legal-gold/30 self-stretch rounded-full" />
+                                                                <div className={`text-lg italic leading-loose font-serif ${darkMode ? 'text-slate-400' : 'text-legal-gray-muted'}`}>
                                                                     "{item.text}"
                                                                 </div>
                                                             </div>
@@ -369,68 +450,76 @@ export default function AppModern() {
 
                 {activeTab === 'favorites' && (
                     <>
-                        <div className="mb-12 text-center py-10 pt-4">
+                        <div className="mb-14 text-center py-12 pt-6">
                             <motion.div
                                 initial={{ scale: 0, rotate: -45 }}
                                 animate={{ scale: 1, rotate: 0 }}
-                                className="w-24 h-24 bg-legal-gold/20 rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-xl"
+                                className="w-28 h-28 bg-legal-gold/20 rounded-[40px] flex items-center justify-center mx-auto mb-8 shadow-2xl ring-4 ring-legal-gold/10"
                             >
-                                <Heart className="text-legal-gold w-12 h-12 fill-legal-gold" />
+                                <Heart className="text-legal-gold w-14 h-14 fill-legal-gold" />
                             </motion.div>
-                            <h2 className="text-4xl font-black text-legal-gray-text tracking-tighter">
+                            <h2 className={`text-5xl font-black tracking-tighter italic ${darkMode ? 'text-white' : 'text-legal-gray-text'}`}>
                                 Mis Favoritos
                             </h2>
-                            <div className="mt-2 text-legal-gold font-bold uppercase text-[10px] tracking-widest">
+                            <div className="mt-4 text-legal-gold font-black uppercase text-[10px] tracking-[0.4em] bg-legal-gold/10 inline-block px-6 py-2 rounded-full shadow-inner">
                                 {savedIds.length} artículos protegidos
                             </div>
                         </div>
 
                         {filteredArticles.length === 0 ? (
-                            <Card className="text-center py-24 rounded-[40px]">
-                                <div className="text-8xl mb-8">🗂️</div>
-                                <h3 className="text-2xl font-black text-legal-gray-text mb-4">
+                            <Card className={`text-center py-28 rounded-[50px] shadow-2xl ${darkMode ? 'bg-legal-blue border-white/5' : 'bg-white'}`}>
+                                <div className="text-9xl mb-10 filter drop-shadow-2xl">🗂️</div>
+                                <h3 className={`text-3xl font-black mb-6 ${darkMode ? 'text-white' : 'text-legal-gray-text'}`}>
                                     Colección Vacía
                                 </h3>
-                                <p className="text-legal-gray-muted text-sm mb-10 max-w-xs mx-auto">
+                                <p className="text-legal-gray-muted text-lg mb-12 max-w-sm mx-auto font-medium">
                                     Toca el símbolo de estrella para guardar artículos importantes para tí
                                 </p>
-                                <Button className="rounded-2xl px-10 py-6 font-black uppercase tracking-widest text-xs" onClick={() => setActiveTab('articles')}>
+                                <Button className="rounded-3xl px-14 py-8 font-black uppercase tracking-[0.3em] text-[10px] shadow-2xl scale-110 active:scale-95 transition-all" onClick={() => setActiveTab('articles')}>
                                     Explorar la Constitución
                                 </Button>
                             </Card>
                         ) : (
-                            <div className="space-y-6">
+                            <div className="space-y-8">
                                 {filteredArticles.map((item) => (
-                                    <Card key={item.id} className="cursor-pointer border-l-[12px] border-legal-gold shadow-xl hover:translate-x-1" hover={false}>
+                                    <Card key={item.id} className={`cursor-pointer border-l-[16px] border-legal-gold shadow-2xl hover:translate-x-3 transition-all duration-300 ${darkMode ? 'bg-legal-blue border-white/5' : 'bg-white'}`} hover={false}>
                                         <div onClick={() => toggleExpand(item.id)}>
                                             <div className="flex items-start justify-between">
                                                 <div className="flex-1">
-                                                    <div className="flex items-center gap-2 mb-3">
-                                                        <span className="font-black text-legal-gold text-xs leading-none">{item.article}</span>
+                                                    <div className="flex items-center gap-3 mb-4">
+                                                        <span className="font-black text-legal-gold text-xs leading-none uppercase tracking-widest">{item.article}</span>
                                                     </div>
-                                                    <h3 className="text-2xl font-black text-legal-gray-text leading-tight">
-                                                        {item.explanation}
+                                                    <h3 className={`text-3xl font-black leading-tight ${darkMode ? 'text-white' : 'text-legal-gray-text'}`}>
+                                                        <TextWithGlossary text={item.explanation} darkMode={darkMode} />
                                                     </h3>
                                                 </div>
-                                                <button
-                                                    onClick={(e) => toggleSave(e, item.id)}
-                                                    className="ml-6 p-2 bg-legal-gold/10 rounded-full"
-                                                >
-                                                    <Star className="w-7 h-7 fill-legal-gold text-legal-gold" />
-                                                </button>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={(e) => shareOnWhatsApp(e, item)}
+                                                        className="p-3 rounded-2xl hover:bg-white/10 transition-all active:scale-90"
+                                                    >
+                                                        <Share2 className={`w-6 h-6 ${darkMode ? 'text-slate-500' : 'text-legal-gray-muted'}`} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => toggleSave(e, item.id)}
+                                                        className="ml-2 p-4 bg-legal-gold/10 rounded-3xl active:scale-90 transition-transform shadow-lg"
+                                                    >
+                                                        <Star className="w-8 h-8 fill-legal-gold text-legal-gold" />
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             {expandedId === item.id && (
                                                 <motion.div
                                                     initial={{ height: 0, opacity: 0 }}
                                                     animate={{ height: 'auto', opacity: 1 }}
-                                                    className="mt-8 pt-8 border-t-2 border-legal-gray"
+                                                    className="mt-10 pt-10 border-t-2 border-legal-gray/20"
                                                 >
-                                                    <div className="bg-legal-gray/40 rounded-[30px] p-8">
-                                                        <h4 className="text-[10px] font-black uppercase text-legal-gray-muted mb-4 tracking-widest flex items-center gap-2">
-                                                            🔍 Resumen Rápido
+                                                    <div className={`rounded-[40px] p-10 shadow-inner ${darkMode ? 'bg-legal-blue-dark/50' : 'bg-legal-gray/40'}`}>
+                                                        <h4 className="text-[10px] font-black uppercase text-legal-gray-muted mb-6 tracking-[0.4em] flex items-center gap-4">
+                                                            <ShieldCheck size={16} className="text-legal-gold" /> Resumen Legal Rápido
                                                         </h4>
-                                                        <p className="text-xl text-legal-gray-text font-bold leading-relaxed">
+                                                        <p className={`text-2xl font-extrabold leading-relaxed ${darkMode ? 'text-white' : 'text-legal-gray-text'}`}>
                                                             {item.application}
                                                         </p>
                                                     </div>
@@ -445,57 +534,106 @@ export default function AppModern() {
                 )}
 
                 {activeTab === 'fulltext' && (
-                    <FullTextViewer constitutionText={constitutionText} darkMode={false} />
+                    <FullTextViewer constitutionText={constitutionText} darkMode={darkMode} />
                 )}
+
+                {/* Footer Premium Reintegrado */}
+                <footer className={`mt-32 pb-24 border-t-2 pt-20 ${darkMode ? 'border-white/5 text-slate-400' : 'border-legal-gray text-legal-gray-muted'}`}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                        <div className={`p-10 rounded-[40px] shadow-2xl relative overflow-hidden group ${darkMode ? 'bg-legal-blue border border-white/5' : 'bg-white border-2 border-legal-gray'}`}>
+                            <div className="absolute -top-10 -right-10 w-40 h-40 bg-legal-gold rounded-full opacity-5 group-hover:opacity-10 transition-opacity blur-3xl" />
+                            <h4 className={`text-xl font-black mb-4 flex items-center gap-3 ${darkMode ? 'text-white' : 'text-legal-gray-text'}`}>
+                                <Heart className="w-6 h-6 text-rose-500 fill-rose-500" />
+                                Apoyá este Proyecto
+                            </h4>
+                            <p className="text-base mb-8 font-medium leading-relaxed">
+                                Esta herramienta es libre y gratuita para todos los ciudadanos. Si te ayudó a conocer tus derechos, considerá apoyarnos.
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <motion.button
+                                    whileHover={{ scale: 1.05, y: -2 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="bg-legal-gold text-white px-8 py-5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-[0_10px_20px_rgba(197,157,113,0.3)] hover:shadow-legal-gold/50 transition-all"
+                                >
+                                    <Coffee size={18} /> Invitar un Cafecito
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.05, y: -2 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className={`px-8 py-5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 border-2 transition-all ${darkMode ? 'border-white/10 text-slate-300 hover:bg-white/5' : 'border-legal-gray text-legal-gray-text hover:bg-legal-gray/20'}`}
+                                >
+                                    <FileText size={18} /> Exportar Resumen
+                                </motion.button>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6 text-center md:text-left">
+                            <div>
+                                <h5 className={`font-black uppercase text-[10px] tracking-[0.5em] mb-4 ${darkMode ? 'text-legal-gold' : 'text-legal-gray-text'}`}>
+                                    Poder Ciudadano
+                                </h5>
+                                <p className="text-sm font-medium leading-loose italic max-w-sm">
+                                    "Todos los habitantes de la Nación gozan de los derechos conforme a las leyes que reglamenten su ejercicio..." — Art. 14 CN
+                                </p>
+                            </div>
+                            <div className="pt-6 border-t-2 border-legal-gray/10 text-[10px] font-black uppercase tracking-[0.3em] opacity-40">
+                                © 2026 Constitución Argentina Digital • Edición Pro • ANDRES WALTER
+                            </div>
+                        </div>
+                    </div>
+                </footer>
             </main>
 
             {/* Bottom Navigation Lux - Estilo Premium Apple */}
-            <nav className="fixed bottom-0 left-0 right-0 z-50 px-6 pb-10 pt-4 bg-gradient-to-t from-legal-gray via-legal-gray/95 to-transparent pointer-events-none">
+            <nav className="fixed bottom-0 left-0 right-0 z-[100] px-6 pb-10 pt-4 bg-gradient-to-t from-legal-blue-dark/50 via-legal-blue-dark/20 to-transparent pointer-events-none">
                 <div className="max-w-md mx-auto pointer-events-auto">
-                    <div className="bg-legal-blue/95 backdrop-blur-2xl rounded-[40px] shadow-[0_25px_60px_rgba(0,0,0,0.4)] px-4 py-4 flex items-center justify-between border border-white/10 ring-1 ring-black/20">
+                    <div className={`rounded-[40px] shadow-[0_30px_70px_rgba(0,0,0,0.5)] px-4 py-4 flex items-center justify-between border-t border-white/20 backdrop-blur-3xl ring-1 ring-black/40 ${darkMode ? 'bg-legal-blue/90' : 'bg-legal-blue/95'}`}>
                         <button
                             onClick={() => setActiveTab('home')}
-                            className={`flex flex-col items-center gap-2 px-6 py-3 rounded-[30px] transition-all duration-500 ${activeTab === 'home'
-                                ? 'bg-legal-gold text-white shadow-[0_10px_20px_rgba(197,157,113,0.3)] scale-110'
-                                : 'text-white/40 hover:text-white/70 hover:scale-105'
+                            className={`flex flex-col items-center gap-2 px-6 py-4 rounded-[30px] transition-all duration-500 ${activeTab === 'home'
+                                ? 'bg-legal-gold text-white shadow-[0_15px_30px_rgba(197,157,113,0.4)] scale-110'
+                                : 'text-white/30 hover:text-white/70 hover:scale-105'
                                 }`}
                         >
-                            <Home size={24} strokeWidth={activeTab === 'home' ? 3 : 2} />
-                            <span className="text-[8px] font-black uppercase tracking-[0.2em]">Inicio</span>
+                            <Home size={26} strokeWidth={activeTab === 'home' ? 3 : 2} />
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em]">Inicio</span>
                         </button>
                         <button
                             onClick={() => setActiveTab('articles')}
-                            className={`flex flex-col items-center gap-2 px-6 py-3 rounded-[30px] transition-all duration-500 ${activeTab === 'articles'
-                                ? 'bg-legal-gold text-white shadow-[0_10px_20px_rgba(197,157,113,0.3)] scale-110'
-                                : 'text-white/40 hover:text-white/70 hover:scale-105'
+                            className={`flex flex-col items-center gap-2 px-6 py-4 rounded-[30px] transition-all duration-500 ${activeTab === 'articles'
+                                ? 'bg-legal-gold text-white shadow-[0_15px_30px_rgba(197,157,113,0.4)] scale-110'
+                                : 'text-white/30 hover:text-white/70 hover:scale-105'
                                 }`}
                         >
-                            <FileText size={24} strokeWidth={activeTab === 'articles' ? 3 : 2} />
-                            <span className="text-[8px] font-black uppercase tracking-[0.2em]">Leyes</span>
+                            <FileText size={26} strokeWidth={activeTab === 'articles' ? 3 : 2} />
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em]">Leyes</span>
                         </button>
                         <button
                             onClick={() => setActiveTab('favorites')}
-                            className={`flex flex-col items-center gap-2 px-6 py-3 rounded-[30px] transition-all duration-500 ${activeTab === 'favorites'
-                                ? 'bg-legal-gold text-white shadow-[0_10px_20px_rgba(197,157,113,0.3)] scale-110'
-                                : 'text-white/40 hover:text-white/70 hover:scale-105'
+                            className={`flex flex-col items-center gap-2 px-6 py-4 rounded-[30px] transition-all duration-500 ${activeTab === 'favorites'
+                                ? 'bg-legal-gold text-white shadow-[0_15px_30px_rgba(197,157,113,0.4)] scale-110'
+                                : 'text-white/30 hover:text-white/70 hover:scale-105'
                                 }`}
                         >
-                            <Star size={24} strokeWidth={activeTab === 'favorites' ? 3 : 2} />
-                            <span className="text-[8px] font-black uppercase tracking-[0.2em]">Favs</span>
+                            <Star size={26} strokeWidth={activeTab === 'favorites' ? 3 : 2} />
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em]">Favs</span>
                         </button>
                         <button
                             onClick={() => setActiveTab('fulltext')}
-                            className={`flex flex-col items-center gap-2 px-6 py-3 rounded-[30px] transition-all duration-500 ${activeTab === 'fulltext'
-                                ? 'bg-legal-gold text-white shadow-[0_10px_20px_rgba(197,157,113,0.3)] scale-110'
-                                : 'text-white/40 hover:text-white/70 hover:scale-105'
+                            className={`flex flex-col items-center gap-2 px-6 py-4 rounded-[30px] transition-all duration-500 ${activeTab === 'fulltext'
+                                ? 'bg-legal-gold text-white shadow-[0_15px_30px_rgba(197,157,113,0.4)] scale-110'
+                                : 'text-white/30 hover:text-white/70 hover:scale-105'
                                 }`}
                         >
-                            <BookText size={24} strokeWidth={activeTab === 'fulltext' ? 3 : 2} />
-                            <span className="text-[8px] font-black uppercase tracking-[0.2em]">Libro</span>
+                            <BookText size={26} strokeWidth={activeTab === 'fulltext' ? 3 : 2} />
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em]">Libro</span>
                         </button>
                     </div>
                 </div>
             </nav>
+
+            {/* Chat Widget Reintegrado */}
+            <ChatWidget constitutionText={constitutionText} darkMode={darkMode} />
 
             {/* Menú Lateral Premium */}
             <AnimatePresence>
@@ -506,31 +644,31 @@ export default function AppModern() {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setMenuOpen(false)}
-                            className="fixed inset-0 bg-legal-blue/90 backdrop-blur-md z-[60]"
+                            className="fixed inset-0 bg-legal-blue-dark/95 backdrop-blur-xl z-[150]"
                         />
                         <motion.div
-                            initial={{ x: -400 }}
+                            initial={{ x: -500 }}
                             animate={{ x: 0 }}
-                            exit={{ x: -400 }}
-                            transition={{ type: 'spring', damping: 30, stiffness: 200 }}
-                            className="fixed left-0 top-0 bottom-0 w-[85%] max-w-sm bg-white shadow-2xl z-[70] p-10 flex flex-col"
+                            exit={{ x: -500 }}
+                            transition={{ type: 'spring', damping: 35, stiffness: 200 }}
+                            className="fixed left-0 top-0 bottom-0 w-[90%] max-w-sm bg-white shadow-2xl z-[160] p-12 flex flex-col"
                         >
-                            <div className="flex items-center justify-between mb-12">
+                            <div className="flex items-center justify-between mb-16">
                                 <div>
-                                    <h3 className="text-4xl font-black text-legal-gray-text tracking-tighter italic">App</h3>
-                                    <div className="h-1.5 w-16 bg-legal-gold rounded-full mt-2" />
+                                    <h3 className="text-5xl font-black text-legal-gray-text tracking-tighter italic">Constitución</h3>
+                                    <div className="h-2 w-24 bg-legal-gold rounded-full mt-3 shadow-lg" />
                                 </div>
-                                <button onClick={() => setMenuOpen(false)} className="p-3 bg-legal-gray rounded-full hover:rotate-90 transition-transform">
-                                    <X className="text-legal-gray-muted" size={28} />
+                                <button onClick={() => setMenuOpen(false)} className="p-4 bg-legal-gray rounded-3xl hover:rotate-180 transition-all duration-500 active:scale-75 shadow-sm">
+                                    <X className="text-legal-gray-muted" size={32} />
                                 </button>
                             </div>
 
-                            <div className="space-y-4 flex-1">
+                            <div className="space-y-6 flex-1">
                                 {[
-                                    { id: 'home', icon: '🏠', label: 'Inicio', desc: 'Panel principal' },
-                                    { id: 'articles', icon: '⚖️', label: 'Explorador', desc: 'Leyes por temas' },
-                                    { id: 'favorites', icon: '⭐', label: 'Favoritos', desc: 'Tus leyes guardadas' },
-                                    { id: 'fulltext', icon: '📖', label: 'Constitución', desc: 'Texto oficial completo' }
+                                    { id: 'home', icon: '🏠', label: 'Inicio', desc: 'Panel de control principal' },
+                                    { id: 'articles', icon: '⚖️', label: 'Explorador', desc: 'Derechos por situaciones' },
+                                    { id: 'favorites', icon: '⭐', label: 'Favoritos', desc: 'Tus leyes protegidas' },
+                                    { id: 'fulltext', icon: '📖', label: 'El Libro', desc: 'Texto oficial completo' }
                                 ].map((item) => (
                                     <button
                                         key={item.id}
@@ -538,34 +676,34 @@ export default function AppModern() {
                                             setActiveTab(item.id);
                                             setMenuOpen(false);
                                         }}
-                                        className={`w-full text-left px-6 py-5 rounded-[24px] transition-all flex items-center gap-5 group ${activeTab === item.id
-                                            ? 'bg-legal-gold/10 text-legal-gold ring-1 ring-legal-gold/20'
-                                            : 'text-legal-gray-text hover:bg-legal-gray'
+                                        className={`w-full text-left px-8 py-7 rounded-[32px] transition-all flex items-center gap-6 group shadow-sm ${activeTab === item.id
+                                            ? 'bg-legal-gold text-white shadow-legal-gold/30'
+                                            : 'text-legal-gray-text hover:bg-legal-gray hover:translate-x-2'
                                             }`}
                                     >
-                                        <div className="text-3xl filter grayscale group-hover:grayscale-0 transition-all">
+                                        <div className={`text-4xl filter group-hover:drop-shadow-lg transition-all ${item.id === activeTab ? '' : 'grayscale group-hover:grayscale-0'}`}>
                                             {item.icon}
                                         </div>
                                         <div>
-                                            <div className="font-black uppercase text-xs tracking-widest">{item.label}</div>
-                                            <div className="text-[10px] text-legal-gray-muted font-bold mt-0.5">{item.desc}</div>
+                                            <div className="font-black uppercase text-[10px] tracking-[0.3em]">{item.label}</div>
+                                            <div className={`text-[10px] font-bold mt-1 ${activeTab === item.id ? 'text-white/60' : 'text-legal-gray-muted'}`}>{item.desc}</div>
                                         </div>
                                     </button>
                                 ))}
                             </div>
 
-                            <div className="mt-auto pt-10 border-t border-legal-gray">
-                                <div className="bg-gradient-to-br from-legal-blue to-legal-blue-dark rounded-[32px] p-8 text-white relative overflow-hidden">
-                                    <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-legal-gold rounded-full opacity-10 blur-3xl" />
-                                    <p className="text-[8px] font-black uppercase tracking-[0.3em] text-legal-gold mb-3">
+                            <div className="mt-auto pt-12 border-t border-legal-gray">
+                                <div className="bg-gradient-to-br from-legal-blue to-legal-blue-dark rounded-[40px] p-10 text-white relative overflow-hidden shadow-2xl group/card-footer">
+                                    <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-legal-gold rounded-full opacity-10 blur-3xl group-hover/card-footer:opacity-20 transition-opacity" />
+                                    <p className="text-[10px] font-black uppercase tracking-[0.5em] text-legal-gold mb-4">
                                         Nación Argentina
                                     </p>
-                                    <h4 className="text-2xl font-black italic tracking-tighter">Legal App</h4>
-                                    <p className="text-xs font-bold opacity-40 mt-1 uppercase tracking-widest">Digital Edition 2026</p>
+                                    <h4 className="text-3xl font-black italic tracking-tighter">Legal App Pro</h4>
+                                    <p className="text-xs font-bold opacity-30 mt-2 uppercase tracking-[0.3em]">State of the Art • 2026</p>
 
-                                    <div className="mt-8 flex items-center justify-between">
-                                        <div className="text-[10px] bg-white/10 px-3 py-1.5 rounded-full font-black">v1.2.0 PRO</div>
-                                        <span className="text-[10px] font-black text-legal-gold">© ADW</span>
+                                    <div className="mt-10 flex items-center justify-between">
+                                        <div className="text-[10px] bg-white/10 px-4 py-2 rounded-full font-black ring-1 ring-white/20">v1.2.5 PRO</div>
+                                        <span className="text-[10px] font-black text-legal-gold tracking-widest whitespace-nowrap">ANDRES WALTER</span>
                                     </div>
                                 </div>
                             </div>
