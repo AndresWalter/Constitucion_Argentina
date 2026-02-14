@@ -9,7 +9,43 @@ import ChatWidget from './ChatWidget';
 import FullTextViewer from './FullTextViewer';
 import constitutionText from './assets/constitution.md?raw';
 
-// Componente para resaltar términos del glosario con Tooltip Premium
+// Componente para resaltar términos del glosario con Tooltip Premium (touch + hover)
+const GlossaryTerm = ({ term, definition, darkMode }) => {
+    const [showTooltip, setShowTooltip] = React.useState(false);
+    const timeoutRef = React.useRef(null);
+
+    const handleClick = (e) => {
+        e.stopPropagation();
+        setShowTooltip(prev => !prev);
+        // Auto-cerrar después de 4s
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => setShowTooltip(false), 4000);
+    };
+
+    React.useEffect(() => {
+        return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
+    }, []);
+
+    return (
+        <span
+            className="group relative inline-block cursor-help text-legal-gold font-bold border-b-2 border-dotted border-legal-gold/40 hover:border-legal-gold transition-colors"
+            onClick={handleClick}
+        >
+            {term}
+            {/* Tooltip Pro — funciona con hover Y con touch/click */}
+            <span className={`${showTooltip ? 'visible opacity-100' : 'invisible opacity-0'} group-hover:visible group-hover:opacity-100 transition-all duration-300 absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 bg-legal-blue text-white text-xs rounded-2xl z-[100] shadow-2xl pointer-events-none border border-white/10 backdrop-blur-xl`}>
+                <div className="font-black uppercase tracking-widest text-[10px] text-legal-gold mb-2 flex items-center gap-2">
+                    <ShieldCheck size={12} /> Definición Legal
+                </div>
+                <div className="leading-relaxed font-medium">
+                    {definition}
+                </div>
+                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-legal-blue rotate-45 border-r border-b border-white/10" />
+            </span>
+        </span>
+    );
+};
+
 const TextWithGlossary = ({ text, darkMode }) => {
     if (!text) return null;
 
@@ -22,21 +58,7 @@ const TextWithGlossary = ({ text, darkMode }) => {
             {parts.map((part, index) => {
                 const termLower = part.toLowerCase();
                 if (GLOSSARY[termLower]) {
-                    return (
-                        <span key={index} className="group relative inline-block cursor-help text-legal-gold font-bold border-b-2 border-dotted border-legal-gold/40 hover:border-legal-gold transition-colors">
-                            {part}
-                            {/* Tooltip Pro */}
-                            <span className="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-300 absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 bg-legal-blue text-white text-xs rounded-2xl z-[100] shadow-2xl pointer-events-none border border-white/10 backdrop-blur-xl">
-                                <div className="font-black uppercase tracking-widest text-[10px] text-legal-gold mb-2 flex items-center gap-2">
-                                    <ShieldCheck size={12} /> Definición Legal
-                                </div>
-                                <div className="leading-relaxed font-medium">
-                                    {GLOSSARY[termLower]}
-                                </div>
-                                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-legal-blue rotate-45 border-r border-b border-white/10" />
-                            </span>
-                        </span>
-                    );
+                    return <GlossaryTerm key={index} term={part} definition={GLOSSARY[termLower]} darkMode={darkMode} />;
                 }
                 return part;
             })}
@@ -145,7 +167,7 @@ export default function AppModern() {
     return (
         <div className={`min-h-screen font-sans transition-colors duration-500 ${darkMode ? 'bg-legal-blue-dark text-slate-100' : 'bg-legal-gray text-legal-gray-text'}`}>
             <header className="bg-gradient-to-br from-legal-blue via-legal-blue-light to-legal-blue-dark text-white relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-radial from-white/5 to-transparent animate-pulse opacity-30"></div>
+                <div className="absolute inset-0 bg-gradient-radial from-white/5 to-transparent animate-[pulse_6s_ease-in-out_infinite] opacity-10"></div>
 
                 <div className="max-w-4xl mx-auto px-4 py-8 relative z-10">
                     <div className="flex justify-between items-center mb-8">
@@ -193,7 +215,7 @@ export default function AppModern() {
                 </div>
             </header>
 
-            <main className="max-w-4xl mx-auto px-4 -mt-8 pb-32">
+            <main className="max-w-4xl mx-auto px-4 -mt-8 pb-48">
                 {activeTab === 'home' && (
                     <>
                         <motion.section
@@ -221,7 +243,7 @@ export default function AppModern() {
                                             }}
                                             className="cursor-pointer"
                                         >
-                                            <Card className={`p-8 h-full flex flex-col items-center text-center justify-center border-2 border-transparent hover:border-legal-gold/40 group transition-all duration-300 shadow-xl ${darkMode ? 'bg-legal-blue border-white/5' : 'bg-white'}`}>
+                                            <Card className={`p-8 h-full flex flex-col items-center text-center justify-center border-2 border-transparent hover:border-legal-gold/40 group transition-all duration-300 ${darkMode ? 'bg-legal-blue border-white/5 shadow-xl' : 'bg-white shadow-lg border-gray-100 hover:shadow-xl'}`}>
                                                 <div className="text-6xl mb-5 group-hover:scale-125 transition-transform duration-500 drop-shadow-xl">
                                                     {emoji}
                                                 </div>
@@ -332,28 +354,33 @@ export default function AppModern() {
                                 </div>
                             </Card>
 
-                            <div className="flex gap-3 overflow-x-auto pb-6 no-scrollbar -mx-4 px-4">
-                                <button
-                                    onClick={() => toggleCategory('Todos')}
-                                    className={`whitespace-nowrap px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${selectedCategories.length === 0
-                                        ? 'bg-legal-blue text-white shadow-xl scale-105'
-                                        : (darkMode ? 'bg-white/5 text-slate-500 border-2 border-white/5' : 'bg-white text-legal-gray-muted border-2 border-legal-gray')
-                                        }`}
-                                >
-                                    Todos los Temas
-                                </button>
-                                {CATEGORIES.filter(c => c !== 'Todos').map((cat) => (
+                            {/* Scroll con indicador de gradiente */}
+                            <div className="relative">
+                                <div className="absolute left-0 top-0 bottom-6 w-8 bg-gradient-to-r from-legal-gray to-transparent z-10 pointer-events-none dark:from-legal-blue-dark" style={darkMode ? { background: 'linear-gradient(to right, #121422, transparent)' } : {}} />
+                                <div className="absolute right-0 top-0 bottom-6 w-8 bg-gradient-to-l from-legal-gray to-transparent z-10 pointer-events-none" style={darkMode ? { background: 'linear-gradient(to left, #121422, transparent)' } : {}} />
+                                <div className="flex gap-3 overflow-x-auto pb-6 no-scrollbar -mx-4 px-6">
                                     <button
-                                        key={cat}
-                                        onClick={() => toggleCategory(cat)}
-                                        className={`whitespace-nowrap px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${selectedCategories.includes(cat)
-                                            ? 'bg-legal-gold text-white shadow-xl scale-105'
-                                            : (darkMode ? 'bg-white/5 text-slate-500 border-2 border-white/5 hover:border-legal-gold/30' : 'bg-white text-legal-gray-muted border-2 border-legal-gray hover:border-legal-gold')
+                                        onClick={() => toggleCategory('Todos')}
+                                        className={`whitespace-nowrap px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all ${selectedCategories.length === 0
+                                            ? 'bg-legal-blue text-white shadow-xl scale-105'
+                                            : (darkMode ? 'bg-white/5 text-slate-500 border-2 border-white/5' : 'bg-white text-legal-gray-muted border-2 border-legal-gray')
                                             }`}
                                     >
-                                        {cat}
+                                        Todos los Temas
                                     </button>
-                                ))}
+                                    {CATEGORIES.filter(c => c !== 'Todos').map((cat) => (
+                                        <button
+                                            key={cat}
+                                            onClick={() => toggleCategory(cat)}
+                                            className={`whitespace-nowrap px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all ${selectedCategories.includes(cat)
+                                                ? 'bg-legal-gold text-white shadow-xl scale-105'
+                                                : (darkMode ? 'bg-white/5 text-slate-500 border-2 border-white/5 hover:border-legal-gold/30' : 'bg-white text-legal-gray-muted border-2 border-legal-gray hover:border-legal-gold')
+                                                }`}
+                                        >
+                                            {cat}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
@@ -592,7 +619,7 @@ export default function AppModern() {
                             onClick={() => setActiveTab('home')}
                             className={`flex flex-col items-center gap-2 px-6 py-4 rounded-[30px] transition-all duration-500 ${activeTab === 'home'
                                 ? 'bg-legal-gold text-white shadow-[0_15px_30px_rgba(197,157,113,0.4)] scale-110'
-                                : 'text-white/30 hover:text-white/70 hover:scale-105'
+                                : 'text-white/50 hover:text-white/80 hover:scale-105'
                                 }`}
                         >
                             <Home size={26} strokeWidth={activeTab === 'home' ? 3 : 2} />
@@ -602,7 +629,7 @@ export default function AppModern() {
                             onClick={() => setActiveTab('articles')}
                             className={`flex flex-col items-center gap-2 px-6 py-4 rounded-[30px] transition-all duration-500 ${activeTab === 'articles'
                                 ? 'bg-legal-gold text-white shadow-[0_15px_30px_rgba(197,157,113,0.4)] scale-110'
-                                : 'text-white/30 hover:text-white/70 hover:scale-105'
+                                : 'text-white/50 hover:text-white/80 hover:scale-105'
                                 }`}
                         >
                             <FileText size={26} strokeWidth={activeTab === 'articles' ? 3 : 2} />
@@ -612,7 +639,7 @@ export default function AppModern() {
                             onClick={() => setActiveTab('favorites')}
                             className={`flex flex-col items-center gap-2 px-6 py-4 rounded-[30px] transition-all duration-500 ${activeTab === 'favorites'
                                 ? 'bg-legal-gold text-white shadow-[0_15px_30px_rgba(197,157,113,0.4)] scale-110'
-                                : 'text-white/30 hover:text-white/70 hover:scale-105'
+                                : 'text-white/50 hover:text-white/80 hover:scale-105'
                                 }`}
                         >
                             <Star size={26} strokeWidth={activeTab === 'favorites' ? 3 : 2} />
@@ -622,7 +649,7 @@ export default function AppModern() {
                             onClick={() => setActiveTab('fulltext')}
                             className={`flex flex-col items-center gap-2 px-6 py-4 rounded-[30px] transition-all duration-500 ${activeTab === 'fulltext'
                                 ? 'bg-legal-gold text-white shadow-[0_15px_30px_rgba(197,157,113,0.4)] scale-110'
-                                : 'text-white/30 hover:text-white/70 hover:scale-105'
+                                : 'text-white/50 hover:text-white/80 hover:scale-105'
                                 }`}
                         >
                             <BookText size={26} strokeWidth={activeTab === 'fulltext' ? 3 : 2} />

@@ -96,7 +96,7 @@ export default function ChatWidget({ constitutionText, darkMode }) {
     };
 
     return (
-        <div className="fixed bottom-24 right-6 z-[200] flex flex-col items-end">
+        <div className="fixed bottom-36 right-5 z-[200] flex flex-col items-end">
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
